@@ -83,9 +83,9 @@ module.exports = window["ReactJSXRuntime"];
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-/*!**********************************!*\
-  !*** ./src/blocks/text-image.js ***!
-  \**********************************/
+/*!****************************!*\
+  !*** ./src/blocks/text.js ***!
+  \****************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__);
@@ -94,32 +94,22 @@ const {
   registerBlockType
 } = wp.blocks;
 const {
-  MediaUpload,
   RichText
 } = wp.blockEditor;
-const {
-  Button
-} = wp.components;
-registerBlockType('custom/text-image', {
-  title: 'Text and Image Block',
+registerBlockType('custom/text', {
+  title: 'Text Block',
   icon: 'format-image',
   category: 'common',
   attributes: {
-    heading: {
+    headingTb: {
       type: 'string',
       source: 'html',
       selector: 'h2'
     },
-    text: {
+    textTb: {
       type: 'string',
       source: 'html',
       selector: 'p'
-    },
-    imageUrl: {
-      type: 'string',
-      source: 'attribute',
-      selector: 'img',
-      attribute: 'src'
     }
   },
   edit: ({
@@ -128,11 +118,10 @@ registerBlockType('custom/text-image', {
   }) => {
     const {
       heading,
-      text,
-      imageUrl
+      text
     } = attributes;
     return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", {
-      className: "text-image-block",
+      className: "text-block",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(RichText, {
         tagName: "h2",
         value: heading,
@@ -147,27 +136,6 @@ registerBlockType('custom/text-image', {
           text: newText
         }),
         placeholder: "Enter text here..."
-      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(MediaUpload, {
-        onSelect: media => setAttributes({
-          imageUrl: media.url
-        }),
-        allowedTypes: ['image'],
-        render: ({
-          open
-        }) => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(Button, {
-          onClick: open,
-          style: {
-            width: '100%',
-            height: '100%'
-          },
-          children: imageUrl ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("img", {
-            src: imageUrl,
-            alt: "Block Image",
-            style: {
-              width: '100%'
-            }
-          }) : 'Select Image'
-        })
       })]
     });
   },
@@ -176,20 +144,16 @@ registerBlockType('custom/text-image', {
   }) => {
     const {
       heading,
-      text,
-      imageUrl
+      text
     } = attributes;
     return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("div", {
-      className: "text-image-block",
+      className: "text-block",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(RichText.Content, {
         tagName: "h2",
         value: heading
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(RichText.Content, {
         tagName: "p",
         value: text
-      }), imageUrl && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("img", {
-        src: imageUrl,
-        alt: "Block Image"
       })]
     });
   }
@@ -198,4 +162,4 @@ registerBlockType('custom/text-image', {
 
 /******/ })()
 ;
-//# sourceMappingURL=text-image.js.map
+//# sourceMappingURL=text.js.map

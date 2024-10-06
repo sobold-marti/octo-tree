@@ -25,13 +25,13 @@ registerBlockType('custom/text-image', {
     },
   },
   edit: ({ attributes, setAttributes }) => {
-    const { text, imageUrl } = attributes;
+    const { heading, text, imageUrl } = attributes;
 
     return (
       <div className="text-image-block">
         <RichText
           tagName="h2"
-          value={text}
+          value={heading}
           onChange={(newHeading) => setAttributes({ heading: newHeading })}
           placeholder="Enter heading here..."
         />
@@ -45,7 +45,7 @@ registerBlockType('custom/text-image', {
           onSelect={(media) => setAttributes({ imageUrl: media.url })}
           allowedTypes={['image']}
           render={({ open }) => (
-            <Button onClick={open}>
+            <Button onClick={open} style={{ width: '100%', height: '100%' }}>
               {imageUrl ? (
                 <img src={imageUrl} alt="Block Image" style={{ width: '100%' }} />
               ) : (

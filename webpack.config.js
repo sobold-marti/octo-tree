@@ -3,7 +3,8 @@ const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
 module.exports = {
     ...defaultConfig,
     entry: {
-        'text-image': './src/blocks/text-image.js', // Block 1 entry point
+        'text-image': './src/blocks/text-image.js',
+        'text': './src/blocks/text.js',
     },
     output: {
         path: __dirname + '/build',    // Output path for compiled files
