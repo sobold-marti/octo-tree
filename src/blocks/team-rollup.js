@@ -1,7 +1,8 @@
-const { registerBlockType } = wp.blocks;
-const { RichText, useBlockProps } = wp.blockEditor;
-const { CheckboxControl } = wp.components;
-const { useSelect } = wp.data;
+import { registerBlockType } from '@wordpress/blocks';
+import { RichText, useBlockProps } from '@wordpress/block-editor';
+import { CheckboxControl } from '@wordpress/components';
+import { useSelect } from '@wordpress/data';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 registerBlockType('custom/team-rollup', {
   title: 'Team Rollup Block',
@@ -15,12 +16,14 @@ registerBlockType('custom/team-rollup', {
     },
     teamSelect: {
       type: 'array',
-      default: [], // Array for multiple selected team member IDs
+      default: [],
     },
   },
   edit: ({ attributes, setAttributes }) => {
-    const { headingTr, teamSelect } = attributes;
-
+      const { headingTr, teamSelect } = attributes;
+      const blockProps = useBlockProps();
+      
+      console.log("teamSelect in editor:", teamSelect);
     // Fetch team posts
     const teamPosts = useSelect((select) => {
       return select('core').getEntityRecords('postType', 'team', { per_page: -1 });
@@ -30,17 +33,27 @@ registerBlockType('custom/team-rollup', {
       ? teamPosts.map((post) => ({ label: post.title.rendered, value: post.id }))
       : [];
 
-    // Toggle function to add/remove selected team member IDs
+    // Toggle team member selection
     const toggleTeamMember = (postId) => {
-      if (teamSelect.includes(postId)) {
-        setAttributes({ teamSelect: teamSelect.filter((id) => id !== postId) });
-      } else {
-        setAttributes({ teamSelect: [...teamSelect, postId] });
-      }
+      const newSelection = teamSelect.includes(postId)
+        ? teamSelect.filter((id) => id !== postId)
+        : [...teamSelect, postId];
+      setAttributes({ teamSelect: newSelection });
+    };
+
+    // Handle reordering with react-beautiful-dnd
+    const handleDragEnd = (result) => {
+      if (!result.destination) return;
+
+      const reorderedTeamSelect = Array.from(teamSelect);
+      const [movedItem] = reorderedTeamSelect.splice(result.source.index, 1);
+      reorderedTeamSelect.splice(result.destination.index, 0, movedItem);
+
+      setAttributes({ teamSelect: reorderedTeamSelect });
     };
 
     return (
-      <div {...useBlockProps()}>
+      <div {...blockProps}>
         {/* RichText component for the heading */}
         <RichText
           tagName="h2"
@@ -49,7 +62,7 @@ registerBlockType('custom/team-rollup', {
           placeholder="Enter heading here..."
         />
 
-        {/* Checkboxes for selecting multiple team members directly in the block */}
+        {/* Checkboxes for selecting team members */}
         <div className="team-selection">
           <p>Select Related Team Members:</p>
           {teamOptions.length > 0 ? (
@@ -65,6 +78,38 @@ registerBlockType('custom/team-rollup', {
             <p>No team members found.</p>
           )}
         </div>
+
+        {/* Drag-and-drop reordering for selected team members */}
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="teamMembers">
+            {(provided) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="selected-team-list"
+              >
+                {teamSelect.map((id, index) => {
+                  const member = teamOptions.find((option) => option.value === id);
+                  return member ? (
+                    <Draggable key={id} draggableId={id.toString()} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className="sortable-item"
+                        >
+                          <p>{member.label}</p>
+                        </div>
+                      )}
+                    </Draggable>
+                  ) : null;
+                })}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
     );
   },
@@ -77,9 +122,7 @@ registerBlockType('custom/team-rollup', {
         <RichText.Content tagName="h2" value={headingTr} />
         
         {/* Store selected team member IDs as a data attribute */}
-        <div className="related-post-ids" data-ids={teamSelect.join(',')}>
-          {/* The selected team member IDs are stored here */}
-        </div>
+        <div className="related-post-ids" data-ids={teamSelect.join(',')} />
       </div>
     );
   },
