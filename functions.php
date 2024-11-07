@@ -48,6 +48,15 @@ function register_custom_blocks() {
         true // Load script in the footer
     );
 
+    // Register script for the Text block
+    wp_register_script(
+        'team-rollup-editor-script',
+        get_template_directory_uri() . '/build/team-rollup.js',
+        ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],
+        filemtime(get_template_directory() . '/build/team-rollup.js'), // Corrected comma
+        true // Load script in the footer
+    );
+
     // Register the Text and Image block
     register_block_type('custom/text-image', [
         'editor_script' => 'text-image-block-editor-script',
@@ -57,12 +66,14 @@ function register_custom_blocks() {
     register_block_type('custom/text', [
         'editor_script' => 'text-block-editor-script',
     ]);
+
+    // Register the Team Rollup block
+    register_block_type('custom/team-rollup', [
+        'editor_script' => 'team-rollup-editor-script',
+    ]);
 }
 
 // Hook into the init action to register the custom blocks
-add_action('init', 'register_custom_blocks');
-
-
 add_action('init', 'register_custom_blocks');
 
 function mytheme_add_admin_menu() {

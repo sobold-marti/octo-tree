@@ -18,32 +18,32 @@ registerBlockType('custom/text', {
     },
   },
   edit: ({ attributes, setAttributes }) => {
-    const { heading, text } = attributes;
+    const { headingTb, textTb } = attributes;
 
     return (
       <div className="text-block">
         <RichText
           tagName="h2"
-          value={heading}
-          onChange={(newHeading) => setAttributes({ heading: newHeading })}
+          value={headingTb}
+          onChange={(newHeading) => setAttributes({ headingTb: newHeading })}
           placeholder="Enter heading here..."
         />
         <RichText
           tagName="p"
-          value={text}
-          onChange={(newText) => setAttributes({ text: newText })}
+          value={textTb}
+          onChange={(newText) => setAttributes({ textTb: newText })}
           placeholder="Enter text here..."
         />
       </div>
     );
   },
   save: ({ attributes }) => {
-    const { heading, text } = attributes;
+    const { headingTb, textTb } = attributes;
 
     return (
       <div className="text-block">
-        <RichText.Content tagName="h2" value={heading} />
-        <RichText.Content tagName="p" value={text} />
+        <RichText.Content tagName="h2" value={headingTb} />
+        <RichText.Content tagName="p" value={textTb} />
       </div>
     );
   },

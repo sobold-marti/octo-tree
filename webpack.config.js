@@ -5,6 +5,7 @@ module.exports = {
     entry: {
         'text-image': './src/blocks/text-image.js',
         'text': './src/blocks/text.js',
+        'team-rollup': './src/blocks/team-rollup.js',
     },
     output: {
         path: __dirname + '/build',    // Output path for compiled files
