@@ -20,10 +20,9 @@ registerBlockType('custom/team-rollup', {
     },
   },
   edit: ({ attributes, setAttributes }) => {
-      const { headingTr, teamSelect } = attributes;
-      const blockProps = useBlockProps();
+    const { headingTr, teamSelect } = attributes;
+    const blockProps = useBlockProps();
       
-      console.log("teamSelect in editor:", teamSelect);
     // Fetch team posts
     const teamPosts = useSelect((select) => {
       return select('core').getEntityRecords('postType', 'team', { per_page: -1 });
