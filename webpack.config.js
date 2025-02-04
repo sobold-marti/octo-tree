@@ -6,6 +6,7 @@ module.exports = {
         'text-image': './src/blocks/text-image.js',
         'text': './src/blocks/text.js',
         'team-rollup': './src/blocks/team-rollup.js',
+        'tabbed-content': './src/blocks/tabbed-content.js',
     },
     output: {
         path: __dirname + '/build',    // Output path for compiled files

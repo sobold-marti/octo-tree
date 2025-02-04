@@ -48,12 +48,21 @@ function register_custom_blocks() {
         true // Load script in the footer
     );
 
-    // Register script for the Text block
+    // Register script for the Team rollup block
     wp_register_script(
         'team-rollup-editor-script',
         get_template_directory_uri() . '/build/team-rollup.js',
         ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],
         filemtime(get_template_directory() . '/build/team-rollup.js'), // Corrected comma
+        true // Load script in the footer
+    );
+
+    // Register script for the Tabbed content block
+    wp_register_script(
+        'tabbed-content-editor-script',
+        get_template_directory_uri() . '/build/tabbed-content.js',
+        ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],
+        filemtime(get_template_directory() . '/build/tabbed-content.js'), // Corrected comma
         true // Load script in the footer
     );
 
@@ -70,6 +79,11 @@ function register_custom_blocks() {
     // Register the Team Rollup block
     register_block_type('custom/team-rollup', [
         'editor_script' => 'team-rollup-editor-script',
+    ]);
+
+    // Register the Tabbed content block
+    register_block_type('custom/tabbed-content', [
+        'editor_script' => 'tabbed-content-editor-script',
     ]);
 }
 
