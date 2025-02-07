@@ -29,13 +29,193 @@ add_action( 'after_setup_theme', 'blank_wordpress_theme_support' );
 /* Disable WordPress Admin Bar for all users */
 add_filter( 'show_admin_bar', '__return_false' );
 
+add_action('graphql_register_types', function() {
+    register_graphql_field('Page', 'heroType', [
+        'type' => 'String',
+        'description' => 'The type of the hero section',
+        'resolve' => function($post) {
+            return get_post_meta($post->ID, 'hero_type', true);
+        }
+    ]);
+
+    register_graphql_field('Page', 'heroHeading', [
+        'type' => 'String',
+        'description' => 'The heading for the hero section',
+        'resolve' => function($post) {
+            return get_post_meta($post->ID, 'hero_heading', true);
+        }
+    ]);
+
+    register_graphql_field('Page', 'heroSubheading', [
+        'type' => 'String',
+        'description' => 'The subheading for the hero section',
+        'resolve' => function($post) {
+            return get_post_meta($post->ID, 'hero_subheading', true);
+        }
+    ]);
+
+    register_graphql_field('Page', 'heroButtonText', [
+        'type' => 'String',
+        'description' => 'Text for the hero section button',
+        'resolve' => function($post) {
+            return get_post_meta($post->ID, 'hero_button_text', true);
+        }
+    ]);
+
+    register_graphql_field('Page', 'heroButtonUrl', [
+        'type' => 'String',
+        'description' => 'URL for the hero section button',
+        'resolve' => function($post) {
+            return get_post_meta($post->ID, 'hero_button_url', true);
+        }
+    ]);
+
+    register_graphql_field('Page', 'heroImage', [
+        'type' => 'String',
+        'description' => 'Hero Image URL',
+        'resolve' => function($post) {
+            $image_id = get_post_meta($post->ID, 'hero_image', true);
+            return $image_id ? wp_get_attachment_image_url($image_id, 'full') : null;
+        }
+    ]);
+});
+
+function add_hero_meta_box() {
+    add_meta_box(
+        'hero_meta_box',               // ID of the meta box
+        'Hero Section',                // Title of the meta box
+        'display_hero_meta_box',       // Callback function to display fields
+        'page',                        // Which post type to add this to (in this case, pages)
+        'normal',                      // Context (normal, side, etc.)
+        'high'                         // Priority
+    );
+}
+add_action('add_meta_boxes', 'add_hero_meta_box');
+
+function display_hero_meta_box($post) {
+    // Add a nonce field to verify later
+    wp_nonce_field(basename(__FILE__), 'hero_nonce');
+
+    // Get current values (if they exist)
+    $hero_type = get_post_meta( $post->ID, 'hero_type', true );
+    $hero_heading = get_post_meta( $post->ID, 'hero_heading', true );
+    $hero_subheading = get_post_meta( $post->ID, 'hero_subheading', true );
+    $hero_button_text = get_post_meta( $post->ID, 'hero_button_text', true );
+    $hero_button_url = get_post_meta( $post->ID, 'hero_button_url', true );
+    $hero_image_id = get_post_meta($post->ID, 'hero_image', true);
+    $hero_image_url = $hero_image_id ? wp_get_attachment_image_url($hero_image_id, 'medium') : '';
+
+    ?>
+    
+    <label for="hero_type">Hero Type</label>
+    <select name="hero_type" id="hero_type" class="widefat">
+        <option value="none" <?php selected( $hero_type, 'none' ); ?>>None</option>
+        <option value="standard" <?php selected( $hero_type, 'standard' ); ?>>Standard</option>
+        <option value="image" <?php selected( $hero_type, 'image' ); ?>>Image</option>
+    </select>
+
+    <label for="hero_heading">Heading</label>
+    <input type="text" name="hero_heading" value="<?php echo esc_attr( $hero_heading ); ?>" class="widefat" />
+
+    <label for="hero_subheading">Subheading</label>
+    <input type="text" name="hero_subheading" value="<?php echo esc_attr( $hero_subheading ); ?>" class="widefat" />
+
+    <label for="hero_button_text">Button Text</label>
+    <input type="text" name="hero_button_text" value="<?php echo esc_attr( $hero_button_text ); ?>" class="widefat" />
+
+    <label for="hero_button_url">Button URL</label>
+    <input type="text" name="hero_button_url" value="<?php echo esc_attr( $hero_button_url ); ?>" class="widefat" />
+    
+    <label for="hero_image">Hero Image</label>
+    <div id="hero_image_wrapper">
+        <button class="button" id="hero_image_button">Select Image</button>
+        <input type="hidden" name="hero_image" id="hero_image" value="<?php echo esc_attr(get_post_meta($post->ID, 'hero_image', true)); ?>" />
+        <div id="hero_image_preview">
+            <?php if ($hero_image_url) : ?>
+                <img src="<?php echo esc_url($hero_image_url); ?>" alt="Hero Image" style="max-width: 100%; height: auto;">
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            var frame;
+
+            // Open the media frame
+            $('#hero_image_button').click(function(e) {
+                e.preventDefault();
+
+                // If the frame already exists, reopen it
+                if (frame) {
+                    frame.open();
+                    return;
+                }
+
+                // Create the frame
+                frame = wp.media({
+                    title: 'Select or Upload Hero Image',
+                    button: {
+                        text: 'Use this image'
+                    },
+                    multiple: false // Allow only one image to be selected
+                });
+
+                // When an image is selected, update the input field with the image URL
+                frame.on('select', function() {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    $('#hero_image').val(attachment.id); // Save the ID, not URL
+                    $('#hero_image_preview').html('<img src="' + attachment.url + '" alt="Hero Image" style="max-width: 100%; height: auto;">');
+                });
+
+                // Open the frame
+                frame.open();
+            });
+        });
+    </script>
+    <?php
+}
+
+function save_hero_meta($post_id) {
+    // Check nonce for security
+    if (!isset($_POST['hero_nonce']) || !wp_verify_nonce($_POST['hero_nonce'], basename( __FILE__ ))) {
+        return $post_id;
+    }
+
+    // Save each field
+    if (isset($_POST['hero_type'])) {
+        update_post_meta($post_id, 'hero_type', sanitize_text_field($_POST['hero_type']));
+    }
+
+    if (isset($_POST['hero_heading'])) {
+        update_post_meta($post_id, 'hero_heading', sanitize_text_field($_POST['hero_heading']));
+    }
+
+    if (isset($_POST['hero_subheading'])) {
+        update_post_meta($post_id, 'hero_subheading', sanitize_text_field($_POST['hero_subheading']));
+    }
+
+    if (isset($_POST['hero_button_text'])) {
+        update_post_meta($post_id, 'hero_button_text', sanitize_text_field($_POST['hero_button_text']));
+    }
+
+    if (isset($_POST['hero_button_url'])) {
+        update_post_meta($post_id, 'hero_button_url', sanitize_text_field($_POST['hero_button_url']));
+    }
+
+    if (isset($_POST['hero_image'])) {
+        $hero_image_id = intval($_POST['hero_image']);
+        update_post_meta($post_id, 'hero_image', $hero_image_id);
+    }
+}
+add_action('save_post', 'save_hero_meta');
+
 function register_custom_blocks() {
     // Register script for the Text and Image block
     wp_register_script(
         'text-image-block-editor-script',
         get_template_directory_uri() . '/build/text-image.js',
         ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],
-        filemtime(get_template_directory() . '/build/text-image.js'), // Corrected comma
+        filemtime(get_template_directory() . '/build/text-image.js'),
         true // Load script in the footer
     );
 
@@ -44,7 +224,7 @@ function register_custom_blocks() {
         'text-block-editor-script',
         get_template_directory_uri() . '/build/text.js',
         ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],
-        filemtime(get_template_directory() . '/build/text.js'), // Corrected comma
+        filemtime(get_template_directory() . '/build/text.js'),
         true // Load script in the footer
     );
 
@@ -53,7 +233,7 @@ function register_custom_blocks() {
         'team-rollup-editor-script',
         get_template_directory_uri() . '/build/team-rollup.js',
         ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],
-        filemtime(get_template_directory() . '/build/team-rollup.js'), // Corrected comma
+        filemtime(get_template_directory() . '/build/team-rollup.js'),
         true // Load script in the footer
     );
 
@@ -62,7 +242,7 @@ function register_custom_blocks() {
         'tabbed-content-editor-script',
         get_template_directory_uri() . '/build/tabbed-content.js',
         ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],
-        filemtime(get_template_directory() . '/build/tabbed-content.js'), // Corrected comma
+        filemtime(get_template_directory() . '/build/tabbed-content.js'),
         true // Load script in the footer
     );
 
@@ -172,9 +352,9 @@ function mytheme_settings_page_html() {
                 });
                 mediaUploader.on('select', function() {
                     var attachment = mediaUploader.state().get('selection').first().toJSON();
-                    $('#mytheme_logo').val(attachment.url); // Set the image URL
-                    $('#mytheme-logo-preview').attr('src', attachment.url).show(); // Show the preview
-                    $('.remove-logo').show(); // Show the remove button
+                    $('#mytheme_logo').val(attachment.url);
+                    $('#mytheme-logo-preview').attr('src', attachment.url).show();
+                    $('.remove-logo').show();
                 });
                 mediaUploader.open();
             });
@@ -182,9 +362,9 @@ function mytheme_settings_page_html() {
             // Remove the logo
             $('.remove-logo').on('click', function(e) {
                 e.preventDefault();
-                $('#mytheme_logo').val(''); // Clear the value
-                $('#mytheme-logo-preview').hide(); // Hide the preview
-                $(this).hide(); // Hide the remove button
+                $('#mytheme_logo').val('');
+                $('#mytheme-logo-preview').hide();
+                $(this).hide();
             });
         });
     </script>
