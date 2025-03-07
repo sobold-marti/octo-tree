@@ -284,11 +284,6 @@ function mytheme_add_admin_menu() {
 add_action( 'admin_menu', 'mytheme_add_admin_menu' );
 
 function mytheme_enqueue_media_uploader($hook) {
-    // Only load the media uploader script on the theme settings page
-    if ($hook !== 'toplevel_page_theme-settings') {
-        return;
-    }
-
     // Enqueue the WordPress media uploader
     wp_enqueue_media();
 }
@@ -343,7 +338,7 @@ function mytheme_settings_page_html() {
                     mediaUploader.open();
                     return;
                 }
-                mediaUploader = wp.media.frames.file_frame = wp.media({
+                mediaUploader = wp.media({
                     title: 'Choose Logo',
                     button: {
                         text: 'Choose Logo'
@@ -403,3 +398,211 @@ function register_custom_menus() {
     ));
 }
 add_action('after_setup_theme', 'register_custom_menus');
+
+// Add Lesson Options Page
+function lessons_add_options_page() {
+    add_submenu_page(
+        'edit.php?post_type=lessons',
+        'Lesson Options',
+        'Lesson Options',
+        'manage_options',
+        'lesson-options',
+        'lesson_options_page_html'
+    );
+}
+add_action('admin_menu', 'lessons_add_options_page');
+
+// Register Lesson Settings
+function lesson_register_settings() {
+    register_setting('lesson_options_group', 'lesson_hero_type');
+    register_setting('lesson_options_group', 'lesson_hero_heading');
+    register_setting('lesson_options_group', 'lesson_hero_subheading');
+    register_setting('lesson_options_group', 'lesson_hero_button_text');
+    register_setting('lesson_options_group', 'lesson_hero_button_url');
+    register_setting('lesson_options_group', 'lesson_hero_image');
+}
+add_action('admin_init', 'lesson_register_settings');
+
+// Add Team Options Page
+function team_add_options_page() {
+    add_submenu_page(
+        'edit.php?post_type=team',
+        'Team Options',
+        'Team Options',
+        'manage_options',
+        'team-options',
+        'team_options_page_html'
+    );
+}
+add_action('admin_menu', 'team_add_options_page');
+
+// Register Team Settings
+function team_register_settings() {
+    register_setting('team_options_group', 'team_hero_type');
+    register_setting('team_options_group', 'team_hero_heading');
+    register_setting('team_options_group', 'team_hero_subheading');
+    register_setting('team_options_group', 'team_hero_button_text');
+    register_setting('team_options_group', 'team_hero_button_url');
+    register_setting('team_options_group', 'team_hero_image');
+}
+add_action('admin_init', 'team_register_settings');
+
+// Output HTML for Lesson Options Page
+function lesson_options_page_html() {
+    post_type_options_page_html('lesson');
+}
+
+// Output HTML for Team Options Page
+function team_options_page_html() {
+    post_type_options_page_html('team');
+}
+
+// Shared HTML for Options Page
+function post_type_options_page_html($prefix) {
+    ?>
+    <div class="wrap">
+        <h1><?php echo ucfirst($prefix); ?> Options</h1>
+        <form method="post" action="options.php">
+            <?php
+            settings_fields("{$prefix}_options_group");
+            do_settings_sections("{$prefix}_options_group");
+            ?>
+
+            <label for="<?php echo "{$prefix}_hero_type"; ?>">Hero Type</label>
+            <select name="<?php echo "{$prefix}_hero_type"; ?>" id="<?php echo "{$prefix}_hero_type"; ?>" class="widefat">
+                <option value="none" <?php selected(get_option("{$prefix}_hero_type"), 'none'); ?>>None</option>
+                <option value="standard" <?php selected(get_option("{$prefix}_hero_type"), 'standard'); ?>>Standard</option>
+                <option value="image" <?php selected(get_option("{$prefix}_hero_type"), 'image'); ?>>Image</option>
+            </select>
+
+            <label for="<?php echo "{$prefix}_hero_heading"; ?>">Hero Heading</label>
+            <input type="text" name="<?php echo "{$prefix}_hero_heading"; ?>" value="<?php echo esc_attr(get_option("{$prefix}_hero_heading")); ?>" />
+
+            <label for="<?php echo "{$prefix}_hero_subheading"; ?>">Hero Subheading</label>
+            <input type="text" name="<?php echo "{$prefix}_hero_subheading"; ?>" value="<?php echo esc_attr(get_option("{$prefix}_hero_subheading")); ?>" />
+
+            <label for="<?php echo "{$prefix}_hero_button_text"; ?>">Button Text</label>
+            <input type="text" name="<?php echo "{$prefix}_hero_button_text"; ?>" value="<?php echo esc_attr(get_option("{$prefix}_hero_button_text")); ?>" class="widefat" />
+
+            <label for="<?php echo "{$prefix}_hero_button_url"; ?>">Button URL</label>
+            <input type="text" name="<?php echo "{$prefix}_hero_button_url"; ?>" value="<?php echo esc_attr(get_option("{$prefix}_hero_button_url")); ?>" class="widefat" />
+
+            <label for="hero_image">Hero Image</label>
+            <div id="<?= "{$prefix}_hero_image_wrapper"; ?>">
+                <button class="button" id="<?= "{$prefix}_hero_image_button"; ?>">Select Image</button>
+                <input type="hidden" name="<?= "{$prefix}_hero_image"; ?>" id="<?= "{$prefix}_hero_image"; ?>" value="<?php echo esc_attr(get_option("${prefix}_hero_image")); ?>" />
+                <div id="<?= "{$prefix}_hero_image_preview"; ?>">
+                    <?php if (get_option("${prefix}_hero_image")) { ?>
+                        <img src="<?= get_option("${prefix}_hero_image"); ?>" alt="Hero Image" style="max-width: 100%; height: auto;">
+                    <?php } ?>
+                </div>
+            </div>
+
+            <?php submit_button(); ?>
+        </form>
+    </div>
+
+    <script type="text/javascript">
+    jQuery(document).ready(function($) {
+        let imageUploader;
+
+        // Open the media frame
+        $('#<?= $prefix; ?>_hero_image_button').click(function(e) {
+            e.preventDefault();
+
+            // If the frame already exists, reopen it
+            if (imageUploader) {
+                imageUploader.open();
+                return;
+            }
+
+            // Create the frame
+            imageUploader = wp.media({
+                title: 'Select or Upload Hero Image',
+                button: {
+                    text: 'Use this image'
+                },
+                multiple: false // Allow only one image to be selected
+            });
+
+            // When an image is selected, update the input field with the image URL
+            imageUploader.on('select', function() {
+                let attachment = imageUploader.state().get('selection').first().toJSON();
+                console.log(attachment);
+                $('#<?= $prefix; ?>_hero_image').val(attachment.url); // Save the ID, not URL
+                $('#<?= $prefix; ?>_hero_image_preview').html('<img src="' + attachment.url + '" alt="Hero Image" style="max-width: 100%; height: auto;">');
+            });
+
+            // Open the frame
+            imageUploader.open();
+        });
+    });
+    </script>
+<?php
+}
+
+// Register GraphQL for Lessons
+function register_lesson_options_graphql() {
+    register_graphql_object_type('LessonOptions', [
+        'description' => __('Lesson Page Hero Options', 'your-textdomain'),
+        'fields' => [
+            'heroType' => ['type' => 'String'],
+            'heroHeading' => ['type' => 'String'],
+            'heroSubheading' => ['type' => 'String'],
+            'heroButtonText' => ['type' => 'String'],
+            'heroButtonUrl' => ['type' => 'String'],
+            'heroImage' => [
+                'type' => 'String',
+                'resolve' => function() {
+                    $hero_image_url = get_option('lesson_hero_image');
+                    return $hero_image_url;
+                }
+            ],
+        ],
+    ]);
+
+    register_graphql_field('RootQuery', 'lessonOptions', [
+        'type' => 'LessonOptions',
+        'resolve' => function() {
+            return [
+                'heroType' => get_option('lesson_hero_type'),
+                'heroHeading' => get_option('lesson_hero_heading'),
+                'heroSubheading' => get_option('lesson_hero_subheading'),
+                'heroButtonText' => get_option('lesson_hero_button_text'),
+                'heroButtonUrl' => get_option('lesson_hero_button_url'),
+                'heroImage' => get_option('lesson_hero_image'),
+            ];
+        },
+    ]);
+}
+add_action('graphql_register_types', 'register_lesson_options_graphql');
+
+// Register GraphQL for Team
+function register_team_options_graphql() {
+    register_graphql_object_type('TeamOptions', [
+        'description' => __('Team Page Hero Options', 'your-textdomain'),
+        'fields' => [
+            'heroType' => ['type' => 'String'],
+            'heroHeading' => ['type' => 'String'],
+            'heroSubheading' => ['type' => 'String'],
+            'heroButtonText' => ['type' => 'String'],
+            'heroButtonUrl' => ['type' => 'String'],
+            'heroImage' => ['type' => 'String'],
+        ],
+    ]);
+
+    register_graphql_field('RootQuery', 'teamOptions', [
+        'type' => 'TeamOptions',
+        'resolve' => function() {
+            return [
+                'heroType' => get_option('team_hero_type'),
+                'heroHeading' => get_option('team_hero_heading'),
+                'heroSubheading' => get_option('team_hero_subheading'),
+                'heroButtonText' => get_option('team_hero_button_text'),
+                'heroButtonUrl' => get_option('team_hero_button_url'),
+                'heroImage' => get_option('team_hero_image'),
+            ];
+        },
+    ]);
+}
+add_action('graphql_register_types', 'register_team_options_graphql');
